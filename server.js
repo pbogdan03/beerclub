@@ -19,6 +19,7 @@ app.use(function(err, req, res, next) {
 	res.send('500 - Server Error');
 });
 
+// start the server
 app.listen(app.get('port'), function() {
 	console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
 });
