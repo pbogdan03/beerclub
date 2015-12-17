@@ -1,0 +1,23 @@
+{
+  "name": "beerclub",
+  "version": "0.1.0",
+  "description": "beering with friends",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pbogdan03/beerclub.git"
+  },
+  "author": "Bogdan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pbogdan03/beerclub/issues"
+  },
+  "homepage": "https://github.com/pbogdan03/beerclub#readme",
+  "dependencies": {
+    "ejs": "^2.3.4",
+    "express": "^4.13.3"
+  }
+}
