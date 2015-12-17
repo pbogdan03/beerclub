@@ -1,14 +1,14 @@
-### Beerclub
+# Beerclub
 
 ## Setup online environment
 
-# Github
+### Github
 
 1. Create new repo on github.com
 2. `git init` or `git clone` using __Github__ settings on local machine
 3. Create *README.md*
 
-# Heroku
+### Heroku
 
 1. Create new __Heroku__ app with `heroku create`
 2. Connect with __Github__ from *Dashboard*
