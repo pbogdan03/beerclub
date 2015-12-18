@@ -1,10 +1,10 @@
 var express = require('express');
-var	mongoose = require('mongoose'); //dbuser: bogdanp, dbpass: clubbingb33r
+var	mongoose = require('mongoose');
 
-mongoose.connect('mongodb://bogdanp:clubbingb33r@ds033175.mongolab.com:33175/beerclubdb', function(err) {
-	if (err) throw err;
-	console.log('Connected to MongoLab...');
-});
+// mongoose.connect('mongodb://dbuser:dbpass@ds033175.mongolab.com:33175/beerclubdb', function(err) {
+// 	if (err) throw err;
+// 	console.log('Connected to MongoLab...');
+// });
 
 var Schema = mongoose.Schema;
 var userSchema = new Schema({

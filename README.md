@@ -32,6 +32,13 @@
 3. Create *views/layouts/main.handlebars* and *views/{404, 500, home}.handlebars* views
 4. Refactor the server side routes to render the newly created views
 
+## Connect with MongoLab
+
+1. `npm install --save mongoose` and require it
+2. Connect to mongolab
+3. Create *User* and *Beer* schemas
+4. Create a user and save it to db if it does not exist
+
 
 
 
