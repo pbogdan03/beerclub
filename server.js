@@ -1,10 +1,14 @@
 var express = require('express');
 var	mongoose = require('mongoose');
+var dbID = require('./config').db;
 
-// mongoose.connect('mongodb://dbuser:dbpass@ds033175.mongolab.com:33175/beerclubdb', function(err) {
-// 	if (err) throw err;
-// 	console.log('Connected to MongoLab...');
-// });
+var node_env = process.env.NODE_ENV || 'development';
+var dbURL = 'mongodb://' + dbID.user + ':' + dbID.pass + '@ds033175.mongolab.com:33175/beerclubdb';
+
+mongoose.connect(dbURL, function(err) {
+	if (err) throw err;
+	console.log('Connected to MongoLab...');
+});
 
 var Schema = mongoose.Schema;
 var userSchema = new Schema({
@@ -52,6 +56,13 @@ User.findOne({'username': 'p_bogdan03'}, function(err, user) {
 });
 
 var app = express();
+
+app.configure('development', function() {
+
+});
+app.configure('production', function() {
+
+});
 
 // set handlebars as the view engine
 var handlebars = require('express-handlebars').create({defaultLayout: 'main'});
