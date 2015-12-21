@@ -1,16 +1,22 @@
 var express = require('express');
 var	mongoose = require('mongoose');
-//var dbID = require('./config').db;
+var fs = require('fs');
+var envVar = require('./env.json');
+var dbID = '';
 
-console.log('process.env.DB_USER: ' + process.env.DB_USER);
+var env = process.env.NODE_ENV || envVar.env;
+if ('development' == env) {
+	dbID = envVar.db;
+} else if ('production' == env) {
+	dbID.user = process.env.DB_USER;
+	dbID.pass = process.env.DB_PASS;
+}
 
-var nodeEnv = process.env.NODE_ENV || 'development';
-//var dbURL = 'mongodb://' + dbID.user + ':' + dbID.pass + '@ds033175.mongolab.com:33175/beerclubdb';
-
-// mongoose.connect(dbURL, function(err) {
-// 	if (err) throw err;
-// 	console.log('Connected to MongoLab...');
-// });
+var dbURL = 'mongodb://' + dbID.user + ':' + dbID.pass + '@ds033175.mongolab.com:33175/beerclubdb';
+mongoose.connect(dbURL, function(err) {
+	if (err) throw err;
+	console.log('Connected to MongoLab...');
+});
 
 var Schema = mongoose.Schema;
 var userSchema = new Schema({
@@ -58,13 +64,6 @@ User.findOne({'username': 'p_bogdan03'}, function(err, user) {
 });
 
 var app = express();
-
-app.configure('development', function() {
-
-});
-app.configure('production', function() {
-
-});
 
 // set handlebars as the view engine
 var handlebars = require('express-handlebars').create({defaultLayout: 'main'});
