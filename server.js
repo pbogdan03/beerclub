@@ -1,10 +1,9 @@
 var express = require('express');
 var	mongoose = require('mongoose');
-var fs = require('fs');
 var envVar = require('./env.json');
 var dbID = {};
 
-var env = process.env.NODE_ENV || envVar.env;
+var env = process.env.NODE_ENV || 'development';
 if ('development' == env) {
 	dbID = envVar.db;
 }
@@ -78,6 +77,17 @@ app.use(express.static(__dirname + '/public'));
 app.get('/', function(req, res) {
 	res.render('home');
 });
+app.get('/new', function(req, res) {
+	res.render('new-beer');
+});
+// app.get('/headers', function(req, res) {
+// 	res.set('Content-Type', 'text/plain');
+// 	var s = '';
+// 	for (var name in req.headers) {
+// 		s += name + ': ' + req.headers[name] + '\n';
+// 	}
+// 	res.send(s);
+// });
 
 // 404 catch-all (middleware)
 app.use(function(req, res, next) {

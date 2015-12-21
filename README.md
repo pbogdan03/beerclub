@@ -39,6 +39,15 @@
 3. Create *User* and *Beer* schemas
 4. Create a user and save it to db if it does not exist
 
+## Setup environment variables
+
+1. Create *env.json* to store all private variables and add it to *.gitignore*
+2. Add necessary environment variables to __Heroku__
+
+## Register with Instagram API
+
+## Register with Untappd API
+
 
 
 
