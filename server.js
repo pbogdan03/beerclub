@@ -5,6 +5,7 @@ var envVar = require('./env.json');
 var dbID = '';
 
 var env = process.env.NODE_ENV || envVar.env;
+console.log(env);
 if ('development' == env) {
 	dbID = envVar.db;
 } else if ('production' == env) {
