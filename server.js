@@ -14,6 +14,7 @@ if ('development' == env) {
 }
 
 var dbURL = 'mongodb://' + dbID.user + ':' + dbID.pass + '@ds033175.mongolab.com:33175/beerclubdb';
+console.log("dbURL: " + dbURL);
 mongoose.connect(dbURL, function(err) {
 	if (err) throw err;
 	console.log('Connected to MongoLab...');
