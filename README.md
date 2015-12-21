@@ -48,6 +48,11 @@
 
 ## Register with Untappd API
 
+## Setup Gulp
+
+1. `npm install --save-dev gulp` and related plugins for nodemon, sass, autoprefixer, load-plugins, size etc.
+2. Setup *nodemon* to watch for changes and reload the server on port 3000
+
 
 
 
