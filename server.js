@@ -8,13 +8,14 @@ var env = process.env.NODE_ENV || envVar.env;
 console.log(env);
 if ('development' == env) {
 	dbID = envVar.db;
-} else if ('production' == env) {
+}
+if ('production' == env) {
 	dbID.user = process.env.DB_USER;
 	dbID.pass = process.env.DB_PASS;
 }
 
 var dbURL = 'mongodb://' + dbID.user + ':' + dbID.pass + '@ds033175.mongolab.com:33175/beerclubdb';
-console.log("dbURL: " + dbURL);
+console.log("dbID.user: " + dbID.user);
 mongoose.connect(dbURL, function(err) {
 	if (err) throw err;
 	console.log('Connected to MongoLab...');
