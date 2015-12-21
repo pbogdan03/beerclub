@@ -2,7 +2,9 @@ var express = require('express');
 var	mongoose = require('mongoose');
 var dbID = require('./config').db;
 
-var node_env = process.env.NODE_ENV || 'development';
+console.log('process.env.DB_USER: ' + process.env.DB_USER);
+
+var nodeEnv = process.env.NODE_ENV || 'development';
 var dbURL = 'mongodb://' + dbID.user + ':' + dbID.pass + '@ds033175.mongolab.com:33175/beerclubdb';
 
 mongoose.connect(dbURL, function(err) {
