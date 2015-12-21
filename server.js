@@ -1,16 +1,16 @@
 var express = require('express');
 var	mongoose = require('mongoose');
-var dbID = require('./config').db;
+//var dbID = require('./config').db;
 
 console.log('process.env.DB_USER: ' + process.env.DB_USER);
 
 var nodeEnv = process.env.NODE_ENV || 'development';
-var dbURL = 'mongodb://' + dbID.user + ':' + dbID.pass + '@ds033175.mongolab.com:33175/beerclubdb';
+//var dbURL = 'mongodb://' + dbID.user + ':' + dbID.pass + '@ds033175.mongolab.com:33175/beerclubdb';
 
-mongoose.connect(dbURL, function(err) {
-	if (err) throw err;
-	console.log('Connected to MongoLab...');
-});
+// mongoose.connect(dbURL, function(err) {
+// 	if (err) throw err;
+// 	console.log('Connected to MongoLab...');
+// });
 
 var Schema = mongoose.Schema;
 var userSchema = new Schema({
