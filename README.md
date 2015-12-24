@@ -52,6 +52,8 @@
 
 1. `npm install --save-dev gulp` and related plugins for nodemon, sass, autoprefixer, load-plugins, size etc.
 2. Setup *nodemon* to watch for changes and reload the server on port 3000
+3. `npm install --save-dev tiny-lr` and setup the *livereload* server to send and watch changes on file change
+4. `npm install --save-dev connect-livereload` to inject the *livereload* script that listens to changes, on the necessary client html pages
 
 
 
