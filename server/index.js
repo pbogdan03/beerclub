@@ -4,6 +4,8 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 
+var env = process.env.NODE_ENV || 'development';
+
 var routes = require('./routes/index');
 
 require('./config/db');
@@ -20,7 +22,11 @@ app.use(favicon(path.join(__dirname, './../public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
-app.use(require('connect-livereload')());
+
+if ('development' === env) {
+	app.use(require('connect-livereload')());
+}
+
 app.use(express.static(path.join(__dirname, './../public')));
 
 app.use('/', routes);
