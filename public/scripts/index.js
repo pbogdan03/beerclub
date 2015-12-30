@@ -1,3 +1,9 @@
+// CONFIGURATION
+
+_.templateSettings = {
+  interpolate: /\{\{(.+?)\}\}/g
+};
+
 // Backbone Model
 
 var Beer = Backbone.Model.extend({

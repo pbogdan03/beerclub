@@ -6,7 +6,7 @@ var bodyParser = require('body-parser');
 
 var env = process.env.NODE_ENV || 'development';
 
-var routes = require('./routes/index');
+var routes = require('./routes/index').router;
 
 require('./config/db');
 
