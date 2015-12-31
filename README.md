@@ -44,6 +44,9 @@
 
 ## Register with Instagram API
 
+1. Install **Passport** to authenticate with **Instagram**
+2. Pass the *access_token* when available and store it to be used with the API.
+
 ## Register with Untappd API
 
 ## Setup Gulp

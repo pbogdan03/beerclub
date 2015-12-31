@@ -3,10 +3,12 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
+require('dotenv').load();
+var passport = require('./auth/index');
 
 var env = process.env.NODE_ENV || 'development';
 
-var routes = require('./routes/index').router;
+var routes = require('./routes/index');
 
 require('./config/db');
 
@@ -22,6 +24,8 @@ app.use(favicon(path.join(__dirname, './../public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 if ('development' === env) {
 	app.use(require('connect-livereload')());
