@@ -35,7 +35,8 @@
 
 1. `npm install --save mongoose` and require it
 2. Connect to mongolab
-3. Create *Beer* schema
+3. Create *Beer* and *User* schema
+4. Create and export *Beer* and *User* models from module.
 
 ## Setup environment variables
 
@@ -46,6 +47,11 @@
 
 1. Install **Passport** to authenticate with **Instagram**
 2. Pass the *access_token* when available and store it to be used with the API.
+3. Change the **Instagram Strategy** to work with the database, by storing the user in the database and changing the serialize and deserialize user functions.
+
+### Setup local API to work with Instagram
+
+1. Create */api/beers* to get all logged in user beer posts.
 
 ## Register with Untappd API
 

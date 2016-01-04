@@ -12,6 +12,13 @@ mongoose.connect(dbURL, function(err) {
 });
 
 var Schema = mongoose.Schema;
+
+var userSchema = new Schema({
+	_id: String,
+	name: String,
+	username: String,
+	beers: [{type: Schema.Types.ObjectId, ref: 'Beer'}]
+});
 var beerSchema = new Schema({
 	title: String,
 	instagram: String,
@@ -19,7 +26,13 @@ var beerSchema = new Schema({
 	untappdRating: Number,
 	userRating: Number,
 	date: Date,
-	user: {type: Number, ref: 'User'}
+	createdBy: {type: Number, ref: 'User'}
 });
 
+var User = mongoose.model('User', userSchema);
 var Beer = mongoose.model('Beer', beerSchema);
+
+module.exports = {
+	'user': User,
+	'beer': Beer
+};
