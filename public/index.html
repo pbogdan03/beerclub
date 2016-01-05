@@ -24,8 +24,10 @@
 
 	<script type="text/template" class="beers-list-template">
 		<div class="col-md-4">
-			<h3 class="title"><a href="#">{{ title }}</a></h3>
+			<h3 class="title"><a href="{{ instagram }}">{{ title }}</a></h3>
 			<p class="description">{{ description }}</p>
+			<p class="rating">{{ userRating }}</p>
+			<p class="rating">{{ createdBy.username }}</p>
 		</div>
 	</script>
 

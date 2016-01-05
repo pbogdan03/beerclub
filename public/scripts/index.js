@@ -1,7 +1,7 @@
 // CONFIGURATION
 
 _.templateSettings = {
-  interpolate: /\{\{(.+?)\}\}/g
+	interpolate: /\{\{(.+?)\}\}/g
 };
 
 // Backbone Model
@@ -15,7 +15,10 @@ var Beer = Backbone.Model.extend({
 
 // Backbone Collection
 
-var Beers = Backbone.Collection.extend({});
+var Beers = Backbone.Collection.extend({
+	model: Beer,
+	url: '/api/beers'
+});
 
 // instantiate two models
 
@@ -31,6 +34,7 @@ var Beers = Backbone.Collection.extend({});
 // instantiate a collection
 
 var beers = new Beers();
+beers.fetch();
 
 // Backbone Views
 
@@ -43,8 +47,8 @@ var BeerView = Backbone.View.extend({
 		this.$el.html(this.template(this.model.toJSON()));
 		return this;
 	}
-
 });
+
 var BeersView = Backbone.View.extend({
 	model: beers,
 	el: $('.beers-list'),

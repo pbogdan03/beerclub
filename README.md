@@ -46,12 +46,14 @@
 ## Register with Instagram API
 
 1. Install **Passport** to authenticate with **Instagram**
-2. Pass the *access_token* when available and store it to be used with the API.
-3. Change the **Instagram Strategy** to work with the database, by storing the user in the database and changing the serialize and deserialize user functions.
+2. Pass the *access_token* when available and store it to be used with the API
+3. Change the **Instagram Strategy** to work with the database, by storing the user in the database and changing the serialize and deserialize user functions
+4. Make a call to **Instagram API** and store it in DB
+5. Make a local API to get documents from DB
 
 ### Setup local API to work with Instagram
 
-1. Create */api/beers* to get all logged in user beer posts.
+1. Create */api/beers* to get all logged in user beer posts
 
 ## Register with Untappd API
 
@@ -67,7 +69,7 @@
 ## Initial setup
 
 1. Create *index.html* in the public folder to be served by **Express**
-2. Add script tags for the necessary dependecies in the page.
+2. Add script tags for the necessary dependecies in the page
 3. Create *scripts/index.js*
 4. Create a *Beer* model and a *BeerView* as well as a *Beers* collection and *BeersView*
 
