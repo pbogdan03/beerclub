@@ -1,11 +1,14 @@
 var express = require('express');
+var colors = require('colors');
 var router = express.Router();
-var passport = require('./../auth/index');
+var passport = require('../auth');
 var https = require('https');
 var Beer = require('../config/db').beer;
 
 var accessToken = '';
 var options = {};
+
+// >>>>>>>> Instagram authentication <<<<<<<<<<
 
 router.get('/auth/instagram',
 	passport.authenticate('instagram'),
@@ -16,8 +19,11 @@ router.get('/auth/instagram/callback',
 	function(req, res, next) {
 		// Not the best way?
 		accessToken = req.user.accessToken;
+		console.log(req.user);
 		res.redirect('/');
 	});
+
+// >>>>>>>>>> Helper routes <<<<<<<<<<<<
 
 router.get('/user', function(req, res, next) {
 	// TODO graceful fail on no token
@@ -36,22 +42,22 @@ router.get('/user', function(req, res, next) {
 	}
 });
 
-router.get('/', function(req, res, next) {
-	res.render('index');
-});
+// >>>>>>>>>>> Instagram API <<<<<<<<<<<<<<
 
-router.get('/api/beers', function(req, res, next) {
-	// this should only get beers from DB not make a call to Instagram API
+router.get('/instagram/posts', isAuthenticated, function(req, res, next) {
+	console.log(req.session.passport.user);
 	options = {
 		hostname: 'api.instagram.com',
 		method: 'GET',
 		path: '/v1/users/self/media/recent/?access_token=' + accessToken
 	};
+	console.log('[' + '/instagram/posts'.grey + ']: ' + 'got in the router'.green);
 	makeRequest(options, function(err, result) {
 		if (err) res.send(err);
+		//console.log(result);
 		if (result.data) {
 			for (var i = 0, j = result.data.length; i < j; i++) {
-				console.log(result.data[i]);
+				//console.log(result.data[i]);
 				var captionTextArr = result.data[i].caption.text.split(' ');
 				var beer = new Beer({
 					title: captionTextArr[0],
@@ -69,12 +75,35 @@ router.get('/api/beers', function(req, res, next) {
 				});
 			}
 		} else {
-			res.send("Not authenticated!");
+			res.send('Not authenticated!');
 		}
 	});
 });
 
+router.get('/api/posts', function(req, res, next) {
+	console.log('trying to get posts from db');
+
+	Beer.find({}, function(err, beers) {
+		res.send(beers);
+	});
+});
+
+// >>>>>>>>>>>>> INDEX <<<<<<<<<<<<<<<
+
+router.get('/', function(req, res, next) {
+	res.render('index');
+});
+
 // HELPERS
+
+function isAuthenticated(req, res, next) {
+	if (req.isAuthenticated()) {
+		console.log('[' + 'isAuthenticated'.grey + ']: ' + 'user is authenticated, call next()'.green);
+		return next();
+	}
+	console.log('[' + 'isAuthenticated'.grey + ']: ' + 'user isn\'t authenticated, redirecting to /auth/instagram'.red);
+	res.redirect('/auth/instagram');
+};
 
 var makeRequest = function(options, cb) {
 	var request = https.request(options, function(res) {
@@ -83,6 +112,10 @@ var makeRequest = function(options, cb) {
 		res.body = '';
 		res.setEncoding('utf8');
 
+		res.on('error', function(err) {
+			console.log(err);
+		});
+
 		res.on('data', function(chunk) {
 			//console.log('BODY: ' + chunk);
 			res.body += chunk;
@@ -90,7 +123,12 @@ var makeRequest = function(options, cb) {
 
 		res.on('end', function() {
 			//console.log('No more data in response.');
-			var obj = JSON.parse(res.body);
+			try {
+				var obj = JSON.parse(res.body); 
+			} catch(e) {
+				console.log('malformed request', res.body);
+				return res.send('malformed request: ' + res.body);
+			}
 			return cb(null, obj);
 		});
 	});

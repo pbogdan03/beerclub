@@ -49,11 +49,10 @@
 2. Pass the *access_token* when available and store it to be used with the API
 3. Change the **Instagram Strategy** to work with the database, by storing the user in the database and changing the serialize and deserialize user functions
 4. Make a call to **Instagram API** and store it in DB
-5. Make a local API to get documents from DB
 
 ### Setup local API to work with Instagram
 
-1. Create */api/beers* to get all logged in user beer posts
+1. Create */api/posts* to get all logged in user beer posts
 
 ## Register with Untappd API
 

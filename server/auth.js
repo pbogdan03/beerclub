@@ -3,10 +3,9 @@ var passport = require('passport');
 var util = require('util');
 var mongoose = require('mongoose');
 var InstagramStrategy = require('passport-instagram').Strategy;
-var User = require('../config/db').user;
+var User = require('./config/db').user;
 
 passport.serializeUser(function(obj, done) {
-	console.log(obj);
 	done(null, obj.user.id);
 });
 
@@ -24,7 +23,6 @@ passport.use(new InstagramStrategy({
 	function(accessToken, refreshToken, profile, done) {
 		User.findById(profile.id, function(err, user) {
 			if (err) return done(err);
-			console.log(user);
 			if (!user) {
 				user = new User({
 					_id: profile.id,

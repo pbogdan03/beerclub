@@ -4,11 +4,12 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 require('dotenv').load();
-var passport = require('./auth/index');
+var session = require('express-session');
+var passport = require('./auth');
 
 var env = process.env.NODE_ENV || 'development';
 
-var routes = require('./routes/index');
+var routes = require('./routes/routes');
 
 require('./config/db');
 
@@ -24,6 +25,7 @@ app.use(favicon(path.join(__dirname, './../public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
+app.use(session({secret: 'test', saveUninitialized: true, resave: true}));
 app.use(passport.initialize());
 app.use(passport.session());
 

@@ -17,7 +17,7 @@ var Beer = Backbone.Model.extend({
 
 var Beers = Backbone.Collection.extend({
 	model: Beer,
-	url: '/api/beers'
+	url: '/api/posts'
 });
 
 // instantiate two models
@@ -34,6 +34,7 @@ var Beers = Backbone.Collection.extend({
 // instantiate a collection
 
 var beers = new Beers();
+// does a GET request to the url specified in the collection
 beers.fetch();
 
 // Backbone Views
@@ -58,6 +59,7 @@ var BeersView = Backbone.View.extend({
 	render: function() {
 		var self = this;
 		this.$el.html('');
+		console.log('tried to render');
 		_.each(this.model.toArray(), function(beer) {
 			self.$el.append((new BeerView({model: beer})).render().$el);
 		});
@@ -66,15 +68,3 @@ var BeersView = Backbone.View.extend({
 });
 
 var beersView = new BeersView();
-
-$(document).ready(function() {
-	$('.add-beer').on('click', function() {
-		var beer = new Beer({
-			title: $('.title-input').val(),
-			description: $('.description-input').val()
-		});
-		$('.title-input').val('');
-		$('.description-input').val('');
-		beers.add(beer);
-	});
-});
