@@ -1,5 +1,4 @@
 var express = require('express');
-var colors = require('colors');
 var router = express.Router();
 var passport = require('../auth');
 var https = require('https');
@@ -7,6 +6,10 @@ var Beer = require('../config/db').beer;
 
 var accessToken = '';
 var options = {};
+
+if ('development' === env) {
+	var colors = require('colors');
+}
 
 // >>>>>>>> Instagram authentication <<<<<<<<<<
 

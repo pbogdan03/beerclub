@@ -3,7 +3,6 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
-require('dotenv').load();
 var session = require('express-session');
 var passport = require('./auth');
 
@@ -31,6 +30,7 @@ app.use(passport.session());
 
 if ('development' === env) {
 	app.use(require('connect-livereload')());
+	require('dotenv').load();
 }
 
 app.use(express.static(path.join(__dirname, './../public')));
