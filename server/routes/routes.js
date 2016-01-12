@@ -7,6 +7,8 @@ var Beer = require('../config/db').beer;
 var accessToken = '';
 var options = {};
 
+var env = process.env.NODE_ENV || 'development';
+
 if ('development' === env) {
 	var colors = require('colors');
 }
