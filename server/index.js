@@ -4,13 +4,16 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var dotenv = require('dotenv');
+if (dotenv) {
+	dotenv.load();
+}
+
 var passport = require('./auth');
+var routes = require('./routes/routes');
+require('./db/config');
 
 var env = process.env.NODE_ENV || 'development';
-
-var routes = require('./routes/routes');
-
-require('./config/db');
 
 var app = express();
 
@@ -30,7 +33,6 @@ app.use(passport.session());
 
 if ('development' === env) {
 	app.use(require('connect-livereload')());
-	require('dotenv').load();
 }
 
 app.use(express.static(path.join(__dirname, './../public')));

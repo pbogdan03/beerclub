@@ -1,15 +1,18 @@
 var express = require('express');
 var passport = require('passport');
 var util = require('util');
+require('colors');
 var mongoose = require('mongoose');
 var InstagramStrategy = require('passport-instagram').Strategy;
-var User = require('./config/db').user;
+var User = require('./db/models/User');
 
 passport.serializeUser(function(obj, done) {
+	console.log('[' + 'serializeUser'.bgWhite.black + ']: ' + 'trying to serialize user '.white + obj.user.name.yellow);
 	done(null, obj.user.id);
 });
 
 passport.deserializeUser(function(id, done) {
+	console.log('[' + 'deserializeUser'.bgWhite.black + ']: ' + 'trying to deserialize user with id: '.white + id.yellow);
 	User.findById(id, function(err, user) {
 		done(err, user);
 	});
@@ -31,14 +34,14 @@ passport.use(new InstagramStrategy({
 				});
 				user.save(function(err) {
 					if (err) console.log(err);
-					console.log(profile.username + ' saved!');
+					console.log('[' + 'InstagramStrategy'.bgWhite.black + ']: ' + profile.username.yellow + ' saved!'.white);
 					return done(null, {
 						accessToken: accessToken,
 						user: user
 					});
 				});
 			} else {
-				console.log(profile.username + ' already in DB!');
+				console.log('[' + 'InstagramStrategy'.bgWhite.black + ']: ' + profile.username.yellow + ' already in DB!'.white);
 				return done(null, {
 					accessToken: accessToken,
 					user: user
