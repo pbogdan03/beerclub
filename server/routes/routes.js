@@ -2,12 +2,15 @@ var express = require('express');
 var router = express.Router();
 var https = require('https');
 require('colors');
+var _ = require('underscore');
 
 var passport = require('../auth');
 var Beer = require('../db/models/Beer');
+var User = require('../db/models/User');
 
 var accessToken = '';
 var options = {};
+var currentUser = {};
 
 /**
  ***********************************************
@@ -25,9 +28,11 @@ router.get('/auth/instagram/callback',
 	passport.authenticate('instagram', {failureRedirect: '/auth/instagram'}),
 	function(req, res, next) {
 		// Not the best way?
+		currentUser = req.user.user;
 		accessToken = req.user.accessToken;
+
 		console.log('[' + '/auth/instagram/callback'.bgWhite.black + ']: ' + 'received accessToken: '.white + accessToken.yellow);
-		res.redirect('/');
+		res.redirect('/instagram/posts');
 	});
 
 /**
@@ -60,7 +65,6 @@ router.get('/user', function(req, res, next) {
  */
 
 router.get('/instagram/posts', isAuthenticated, function(req, res, next) {
-	console.log(req.session.passport.user);
 	options = {
 		hostname: 'api.instagram.com',
 		method: 'GET',
@@ -69,31 +73,12 @@ router.get('/instagram/posts', isAuthenticated, function(req, res, next) {
 	console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'got in the router'.white);
 	makeRequest(options, function(err, result) {
 		if (err) res.send(err);
-		//console.log(result);
-		if (result.data) {
-			for (var i = 0, j = result.data.length; i < j; i++) {
-				//console.log(result.data[i]);
-				var captionTextArr = result.data[i].caption.text.split(' ');
-				var beer = new Beer({
-					title: captionTextArr[0],
-					instagram: result.data[i].link,
-					description: 'To be completed from Untappd',
-					untappdRating: 3,
-					userRating: captionTextArr[1].slice(1, -1),
-					date: new Date(result.data[i].created_time * 1000), // jscs:disable
-					createdBy: result.data[i].user.id
-				});
-				/* jshint ignore:start */
-				beer.save(function(err, beer) {
-					if (err) console.log(err);
-					console.log(beer + ' saved to DB!');
-					// this should use populate to get beer document to have a relation with user
-				});
-				/* jshint ignore:end */
-			}
+		if (result) {
+			saveBeerToDB(result);
 		} else {
-			res.send('Not authenticated!');
+			res.send('No data available');
 		}
+		res.redirect('/');
 	});
 });
 
@@ -104,13 +89,18 @@ router.get('/instagram/posts', isAuthenticated, function(req, res, next) {
  */
 
 router.get('/api/posts', function(req, res, next) {
-	//console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'req.session: '.white + req.session.yellow);
+
 	console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'trying to get beers from DB'.white);
 
-	Beer.find({}, function(err, beers) {
-		if(err) {
+	Beer.find({}).populate('createdBy').exec(function(err, beers) {
+		console.log(beers);
+		if (err) {
 			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
 			res.send(err);
+		}
+		if (!beers.length) {
+			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'no beers'.white);
+			res.send('');
 		} else {
 			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'got beers from DB, sending them to client...'.white);
 			res.send(beers);
@@ -119,7 +109,23 @@ router.get('/api/posts', function(req, res, next) {
 });
 
 router.get('/api/users', function(req, res, next) {
-	res.send("Yes, this is user!");
+
+	console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'trying to get users from DB'.white);
+
+	User.find({}).populate('beers').exec(function(err, users) {
+		console.log(users);
+		if (err) {
+			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
+			res.send(err);
+		}
+		if (!users.length) {
+			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'no users'.white);
+			res.send('');
+		} else {
+			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'got users from DB, sending them to client...'.white);
+			res.send(users);
+		}
+	});
 });
 
 /**
@@ -154,25 +160,21 @@ function makeRequest(options, cb) {
 		res.body = '';
 		res.setEncoding('utf8');
 
-		res.on('error', function(err) {
-			console.log(err);
-		});
-
 		res.on('data', function(chunk) {
-			console.log('BODY: ' + chunk);
+			//console.log('BODY: ' + chunk);
 			res.body += chunk;
 		});
 
 		res.on('end', function() {
-			var obj = {};
-			//console.log('No more data in response.');
+			console.log('No more data in response.');
+
 			try {
-				obj = JSON.parse(res.body);
+				res.body = JSON.parse(res.body);
 			} catch (e) {
-				console.log('malformed request', res.body);
-				return res.send('malformed request: ' + res.body);
+				console.log(e);
+			} finally {
+				return cb(null, res.body);
 			}
-			return cb(null, obj);
 		});
 	});
 
@@ -180,7 +182,49 @@ function makeRequest(options, cb) {
 		console.log('problem with request: ' + err.message);
 		cb(err, null);
 	});
+
 	request.end();
+
+}
+
+function saveBeerToDB(data) {
+	_.each(data.data, function(el, index, list) {
+		var captionTextArr = el.caption.text.split(' ');
+		var beer = new Beer({
+			title: captionTextArr[0],
+			instagram: el.link,
+			description: 'To be completed from Untappd',
+			untappdRating: 3,
+			userRating: captionTextArr[1].slice(1, -1),
+			date: new Date(el.created_time * 1000),
+			createdBy: el.user.id
+		});
+
+		// faster than findOne
+		Beer.find({'title': beer.title}).limit(1).exec(function(err, res) {
+			if (err) {
+				console.log('[' + 'makeRequest; Beer.findOne'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
+			}
+			if (!res.length) {
+				_saveToDB();
+			} else {
+				console.log('[' + 'makeRequest; Beer.find'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' already in DB!'.white);
+			}
+		});
+	});
+
+	function _saveToDB() {
+		beer.save(function(err, beer) {
+			if (err) console.log(err);
+
+			// for populating the user with the new beer
+			User.update({_id: beer.createdBy}, {$addToSet: {beers: beer}}, function(err, user) {
+				if (err) console.log(err);
+			});
+
+			console.log('[' + 'makeRequest; beer.save'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' saved to DB!'.white);
+		});
+	}
 }
 
 module.exports = router;
