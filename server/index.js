@@ -11,6 +11,7 @@ if (dotenv) {
 
 var passport = require('./auth');
 var routes = require('./routes/routes');
+
 require('./db/config');
 
 var env = process.env.NODE_ENV || 'development';

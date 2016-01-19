@@ -40,9 +40,11 @@ beers.fetch();
 // Backbone Views
 
 var BeerView = Backbone.View.extend({
+	className: 'col-md-4 beer-post',
 	model: new Beer(),
 	initialize: function() {
-		this.template = _.template($('.beers-list-template').html());
+		this.beerPost = this.$('.beer-post');
+		this.template = _.template($('.beer-post-template').html());
 	},
 	render: function() {
 		this.$el.html(this.template(this.model.toJSON()));
@@ -52,18 +54,34 @@ var BeerView = Backbone.View.extend({
 
 var BeersView = Backbone.View.extend({
 	model: beers,
-	el: $('.beers-list'),
+
 	initialize: function() {
 		this.model.on('add', this.render, this);
+		this.template = _.template($('.beers-template').html());
+		this.$el.html(this.template);
+
+		this.$beersList = this.$('.beers-list');
+		this.$updatePostBtn = this.$('.instauth');
 	},
+
+	events: {
+		'click .instauth': 'addLoading'
+	},
+
 	render: function() {
-		var self = this;
-		this.$el.html('');
+		this.$beersList.html('');
 		console.log('tried to render');
 		_.each(this.model.toArray(), function(beer) {
-			self.$el.append((new BeerView({model: beer})).render().$el);
-		});
+			this.$beersList.append((new BeerView({model: beer})).render().$el);
+		}.bind(this));
+
+		$('body').append(this.$el);
+
 		return this;
+	},
+
+	addLoading: function(e) {
+		$(e.target).addClass('loading');
 	}
 });
 

@@ -189,9 +189,11 @@ function makeRequest(options, cb) {
 
 function saveBeerToDB(data) {
 	_.each(data.data, function(el, index, list) {
+		console.log(el.images.standard_resolution.url);
 		var captionTextArr = el.caption.text.split(' ');
 		var beer = new Beer({
 			title: captionTextArr[0],
+			photoUrl: el.images.standard_resolution.url,
 			instagram: el.link,
 			description: 'To be completed from Untappd',
 			untappdRating: 3,
@@ -205,15 +207,16 @@ function saveBeerToDB(data) {
 			if (err) {
 				console.log('[' + 'makeRequest; Beer.findOne'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
 			}
+			// if no duplicate entry in DB, save the document
 			if (!res.length) {
-				_saveToDB();
+				_saveToDB(beer);
 			} else {
 				console.log('[' + 'makeRequest; Beer.find'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' already in DB!'.white);
 			}
 		});
 	});
 
-	function _saveToDB() {
+	function _saveToDB(beer) {
 		beer.save(function(err, beer) {
 			if (err) console.log(err);
 
