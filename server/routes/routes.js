@@ -9,8 +9,10 @@ var Beer = require('../db/models/Beer');
 var User = require('../db/models/User');
 
 var accessToken = '';
-var options = {};
+var instagramOptions = {};
+var untappdOptions = {};
 var currentUser = {};
+var beerToSave = {};
 
 /**
  ***********************************************
@@ -65,20 +67,23 @@ router.get('/user', function(req, res, next) {
  */
 
 router.get('/instagram/posts', isAuthenticated, function(req, res, next) {
-	options = {
+	instagramOptions = {
 		hostname: 'api.instagram.com',
 		method: 'GET',
 		path: '/v1/users/self/media/recent/?access_token=' + accessToken
 	};
 	console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'got in the router'.white);
-	makeRequest(options, function(err, result) {
+	makeRequest(instagramOptions, function(err, result) {
 		if (err) res.send(err);
 		if (result) {
-			saveBeerToDB(result);
+			composeBeerDoc(result, function(err, result) {
+				if (result) {
+					res.redirect('/');
+				}
+			});
 		} else {
 			res.send('No data available');
 		}
-		res.redirect('/');
 	});
 });
 
@@ -184,48 +189,88 @@ function makeRequest(options, cb) {
 	});
 
 	request.end();
-
 }
 
-function saveBeerToDB(data) {
+function composeBeerDoc(data, cb) {
+	var regexTitle = new RegExp(/[^[]*/);
+	var regexRating = new RegExp(/\[(.*)\]/);
+
 	_.each(data.data, function(el, index, list) {
-		console.log(el.images.standard_resolution.url);
-		var captionTextArr = el.caption.text.split(' ');
+		var captionTextArr = el.caption.text;
+		//console.log(captionTextArr.match(regexTitle)[0].slice(0, -1).replace(/\s/g, '%20'));
 		var beer = new Beer({
-			title: captionTextArr[0],
+			title: captionTextArr.match(regexTitle)[0].slice(0, -1),
 			photoUrl: el.images.standard_resolution.url,
 			instagram: el.link,
 			description: 'To be completed from Untappd',
 			untappdRating: 3,
-			userRating: captionTextArr[1].slice(1, -1),
+			userRating: el.caption.text.match(regexRating).slice(1, -1),
 			date: new Date(el.created_time * 1000),
 			createdBy: el.user.id
 		});
 
-		// faster than findOne
+		untappdOptions = {
+			hostname: 'api.untappd.com',
+			method: 'GET',
+			path: '/v4/search/beer?client_id=' + process.env.UNTAPPD_ID + '&client_secret=' + process.env.UNTAPPD_PASS + '&q=' + beer.title.replace(/\s/g, '%20')
+		};
+		makeRequest(untappdOptions, function(err, result) {
+			if (err) res.send(err);
+			if (result) {
+				var items = result.response.beers.items;
+				console.log(items);
+				var beerID;
+				_.each(items, function(el, index, list) {
+					if (el.beer.beer_name.toLowerCase() === beer.title.toLowerCase()) {
+						beerID = el.beer.bid;
+						beer.description = el.beer.beer_description;
+					}
+				});
+
+				untappdOptions = {
+					hostname: 'api.untappd.com',
+					method: 'GET',
+					path: '/v4/beer/info/' + beerID + '?client_id=' + process.env.UNTAPPD_ID + '&client_secret=' + process.env.UNTAPPD_PASS + '&compact=true'
+				};
+				makeRequest(untappdOptions, function(err, result) {
+					if (err) res.send(err);
+					if (result) {
+						console.log(result);
+						beer.untappdRating = result.response.beer.rating_score;
+						//_saveToDB(beer, cb);
+					} else {
+						res.send('No data available');
+					}
+				});
+			} else {
+				res.send('No data available');
+			}
+		});
+	});
+
+	function _saveToDB(beer, cb) {
+		// search for duplicates (faster than findOne)
 		Beer.find({'title': beer.title}).limit(1).exec(function(err, res) {
 			if (err) {
 				console.log('[' + 'makeRequest; Beer.findOne'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
 			}
 			// if no duplicate entry in DB, save the document
 			if (!res.length) {
-				_saveToDB(beer);
+				beer.save(function(err, beer) {
+					if (err) console.log(err);
+
+					// for populating the user with the new beer
+					User.update({_id: beer.createdBy}, {$addToSet: {beers: beer}}, function(err, user) {
+						if (err) console.log(err);
+					});
+
+					cb(null, beer);
+
+					console.log('[' + 'makeRequest; beer.save'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' saved to DB!'.white);
+				});
 			} else {
 				console.log('[' + 'makeRequest; Beer.find'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' already in DB!'.white);
 			}
-		});
-	});
-
-	function _saveToDB(beer) {
-		beer.save(function(err, beer) {
-			if (err) console.log(err);
-
-			// for populating the user with the new beer
-			User.update({_id: beer.createdBy}, {$addToSet: {beers: beer}}, function(err, user) {
-				if (err) console.log(err);
-			});
-
-			console.log('[' + 'makeRequest; beer.save'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' saved to DB!'.white);
 		});
 	}
 }

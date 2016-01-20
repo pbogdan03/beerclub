@@ -62,6 +62,8 @@ var BeersView = Backbone.View.extend({
 
 		this.$beersList = this.$('.beers-list');
 		this.$updatePostBtn = this.$('.instauth');
+
+		this.render();
 	},
 
 	events: {
