@@ -25,8 +25,39 @@ gulp.task('nodemon', function(cb) {
 		console.log('--->>> Server restarted!'.white);
 	});
 
+	gulp.watch('./client/styles/*.scss', ['styles']);
 	gulp.watch(['public/**', 'server/views/*.*'], reloadNotify);
 });
+
+gulp.task('styles', function() {
+	return gulp.src('./client/styles/*.scss')
+		.pipe($.sass())
+		.pipe(gulp.dest('./public/styles'));
+});
+
+/**
+ * useref uses(if it exists):
+ * <!-- build:js js/main.min.js -->
+ * <!-- endbuild -->
+ **/
+gulp.task('html', function() {
+	return gulp.src('./client/index.html')
+		.pipe($.useref())
+		.pipe(gulp.dest('./public'));
+});
+
+gulp.task('scripts', function() {
+	return gulp.src('./client/scripts/**/*.js')
+		.pipe($.concat('main.min.js'))
+		.pipe($.uglify())
+		.pipe(gulp.dest('./public'));
+});
+
+/**
+ ***********************************************
+ *	Helper functions
+ ***********************************************
+ */
 
 function reloadNotify(ev) {
 	var fileName = require('path').relative(__dirname, ev.path);

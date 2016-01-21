@@ -98,7 +98,6 @@ router.get('/api/posts', function(req, res, next) {
 	console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'trying to get beers from DB'.white);
 
 	Beer.find({}).populate('createdBy').exec(function(err, beers) {
-		console.log(beers);
 		if (err) {
 			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
 			res.send(err);
@@ -118,7 +117,6 @@ router.get('/api/users', function(req, res, next) {
 	console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'trying to get users from DB'.white);
 
 	User.find({}).populate('beers').exec(function(err, users) {
-		console.log(users);
 		if (err) {
 			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
 			res.send(err);
@@ -196,15 +194,13 @@ function composeBeerDoc(data, cb) {
 	var regexRating = new RegExp(/\[(.*)\]/);
 
 	_.each(data.data, function(el, index, list) {
-		var captionTextArr = el.caption.text;
-		//console.log(captionTextArr.match(regexTitle)[0].slice(0, -1).replace(/\s/g, '%20'));
 		var beer = new Beer({
-			title: captionTextArr.match(regexTitle)[0].slice(0, -1),
+			title: el.caption.text.match(regexTitle)[0].slice(0, -1),
 			photoUrl: el.images.standard_resolution.url,
 			instagram: el.link,
 			description: 'To be completed from Untappd',
 			untappdRating: 3,
-			userRating: el.caption.text.match(regexRating).slice(1, -1),
+			userRating: el.caption.text.match(regexRating)[0].slice(1, -1),
 			date: new Date(el.created_time * 1000),
 			createdBy: el.user.id
 		});
@@ -218,7 +214,6 @@ function composeBeerDoc(data, cb) {
 			if (err) res.send(err);
 			if (result) {
 				var items = result.response.beers.items;
-				console.log(items);
 				var beerID;
 				_.each(items, function(el, index, list) {
 					if (el.beer.beer_name.toLowerCase() === beer.title.toLowerCase()) {
@@ -235,9 +230,8 @@ function composeBeerDoc(data, cb) {
 				makeRequest(untappdOptions, function(err, result) {
 					if (err) res.send(err);
 					if (result) {
-						console.log(result);
-						beer.untappdRating = result.response.beer.rating_score;
-						//_saveToDB(beer, cb);
+						beer.untappdRating = parseFloat(result.response.beer.rating_score);
+						_saveToDB(beer, cb);
 					} else {
 						res.send('No data available');
 					}
@@ -270,6 +264,8 @@ function composeBeerDoc(data, cb) {
 				});
 			} else {
 				console.log('[' + 'makeRequest; Beer.find'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' already in DB!'.white);
+
+				cb(null, res);
 			}
 		});
 	}
