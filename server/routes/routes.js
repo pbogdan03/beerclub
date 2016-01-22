@@ -3,6 +3,7 @@ var router = express.Router();
 var https = require('https');
 require('colors');
 var _ = require('underscore');
+var Q = require('q');
 
 var passport = require('../auth');
 var Beer = require('../db/models/Beer');

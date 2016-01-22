@@ -1,11 +1,14 @@
 var gulp = require('gulp');
+var browserify = require('browserify');
+var source = require('vinyl-source-stream');
+var buffer = require('vinyl-buffer');
 require('colors');
 var lr = require('tiny-lr')();
 var $ = require('gulp-load-plugins')();
 
 gulp.task('default', ['nodemon'], function() {});
 
-gulp.task('nodemon', function(cb) {
+gulp.task('nodemon', ['styles', 'browserify', 'html'], function(cb) {
 	lr.listen(35729, function() {
 		console.log('--->>> Tiny-lr listens on: 35729'.white);
 	});
@@ -26,7 +29,9 @@ gulp.task('nodemon', function(cb) {
 	});
 
 	gulp.watch('./client/styles/*.scss', ['styles']);
-	gulp.watch(['public/**', 'server/views/*.*'], reloadNotify);
+	gulp.watch('./client/scripts/**/*.js', ['browserify']);
+	gulp.watch('./client/*.html', ['html']);
+	gulp.watch(['public/**'], reloadNotify);
 });
 
 gulp.task('styles', function() {
@@ -49,6 +54,16 @@ gulp.task('html', function() {
 gulp.task('scripts', function() {
 	return gulp.src('./client/scripts/**/*.js')
 		.pipe($.concat('main.min.js'))
+		.pipe($.uglify())
+		.pipe(gulp.dest('./public'));
+});
+
+gulp.task('browserify', function() {
+	return browserify('./client/scripts/scripts.js')
+		.bundle()
+		//desired output filename
+		.pipe(source('main.js'))
+		.pipe(buffer())
 		.pipe($.uglify())
 		.pipe(gulp.dest('./public'));
 });
