@@ -8,7 +8,7 @@ var $ = require('gulp-load-plugins')();
 
 gulp.task('default', ['nodemon'], function() {});
 
-gulp.task('nodemon', ['styles', 'browserify', 'html'], function(cb) {
+gulp.task('nodemon', ['styles', 'browserify'], function(cb) {
 	lr.listen(35729, function() {
 		console.log('--->>> Tiny-lr listens on: 35729'.white);
 	});
@@ -37,6 +37,8 @@ gulp.task('nodemon', ['styles', 'browserify', 'html'], function(cb) {
 gulp.task('styles', function() {
 	return gulp.src('./client/styles/*.scss')
 		.pipe($.sass())
+		.pipe($.autoprefixer({browsers: ['last 2 version']}))
+		.pipe($.cssmin())
 		.pipe(gulp.dest('./public/styles'));
 });
 
@@ -51,6 +53,7 @@ gulp.task('html', function() {
 		.pipe(gulp.dest('./public'));
 });
 
+// browserify takes care of this
 gulp.task('scripts', function() {
 	return gulp.src('./client/scripts/**/*.js')
 		.pipe($.concat('main.min.js'))

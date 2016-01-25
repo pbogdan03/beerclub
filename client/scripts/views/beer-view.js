@@ -29,10 +29,10 @@ var BeersView = Backbone.View.extend({
 
 	initialize: function() {
 		this.model.on('add', this.render, this);
-		this.template = _.template($('.beers-template').html());
+		this.template = _.template($('.beer-list-template').html());
 		this.$el.html(this.template);
 
-		this.$beersList = this.$('.beers-list');
+		this.$beersList = this.$('.beer-list');
 		this.$updatePostBtn = this.$('.instauth');
 
 		this.render();

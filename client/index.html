@@ -8,7 +8,7 @@
 	<link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
-	<script type="text/template" class="beers-template">
+	<script type="text/template" class="beer-list-template">
 		<div class="container">
 			<h1>Welcome to Beerclub</h1>	
 		</div>
@@ -19,24 +19,21 @@
 					<a href="/instagram/posts" class="btn btn-primary instauth">Update Posts</a>
 				</div>
 			</div>
-			<div class="row beers-list">
+			<div class="row beer-list">
 			</div>
 		</div>
 	</script>
 
 	<script type="text/template" class="beer-post-template">
 		<div style="background-image: linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), url({{ photoUrl }});">
-			<h3 class="title"><a href="{{ instagram }}">{{ title }}</a></h3>
-			<p class="description">{{ description }}</p>
-			<p class="rating">{{ userRating }}</p>
-			<p class="rating">{{ untappdRating }}</p>
-			<p class="user">{{ createdBy.username }}</p>
+			<h3 class="beer-post__title"><a href="{{ instagram }}">{{ title }}</a></h3>
+			<p class="beer-post__description">{{ description }}</p>
+			<p class="beer-post__rating">Rating: {{ userRating }}</p>
+			<p class="beer-post__rating--total">Total score: {{ untappdRating }}</p>
+			<p class="beer-post__user">Created by: {{ createdBy.username }}</p>
 		</div>
 	</script>
 
-	<!-- build:js main.js -->
-	<script src="scripts/models/beer.js"></script>
-	<script src="scripts/views/beer-view.js"></script>
-	<!-- endbuild -->
+	<script src="main.js"></script>
 </body>
 </html>
