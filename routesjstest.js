@@ -73,33 +73,18 @@ router.get('/instagram/posts', isAuthenticated, function(req, res, next) {
 		path: '/v1/users/self/media/recent/?access_token=' + accessToken,
 	};
 	console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'got in the router'.white);
-
-	makeRequest(instagramOptions)
-	.then(function(result) {
-		var savedBeers = beerAndSave(result);
-		if (!savedBeers) {
-			console.log('no beers saved!');
+	makeRequest(instagramOptions, function(err, result) {
+		if (err) res.send(err);
+		if (result) {
+			composeBeerDoc(result, function(err, result) {
+				if (result) {
+					res.redirect('/');
+				}
+			});
 		} else {
-			console.log(savedBeers);
+			res.send('No data available');
 		}
-	})
-	// .then(function(beer) {
-	// 	console.log(beer);
-	// })
-	.catch(function(err) {
-		console.log(err);
 	});
-
-	// _retry(makeRequest(instagramOptions))
-	// .then(function(result) {
-	// 	return composeBeerDoc(result);
-	// })
-	// .then(function(beer) {
-	// 	res.redirect('/');
-	// })
-	// .catch(function(err) {
-	// 	res.send(err);
-	// });
 });
 
 /**
@@ -175,9 +160,8 @@ function isAuthenticated(req, res, next) {
 function makeRequest(options) {
 	return new Promise(function(resolve, reject) {
 		var request = https.request(options, function(res) {
-			console.log('[' + 'makeRequest'.bgWhite.black + ']: ' + options.hostname.white);
-			console.log('STATUS: ' + res.statusCode);
-			// console.log('HEADERS: ' + JSON.stringify(res.headers));
+			//console.log('STATUS: ' + res.statusCode);
+			//console.log('HEADERS: ' + JSON.stringify(res.headers));
 			res.body = '';
 			res.setEncoding('utf8');
 
@@ -194,30 +178,25 @@ function makeRequest(options) {
 				} catch (e) {
 					reject(e);
 				} finally {
-					if (res.statusCode !== 200) {
-						reject(new Error('statusCode: ' + res.statusCode));
-					} else {
-						resolve(res.body);
-					}
+					resolve(res.body);
 				}
 			});
 		});
 
 		request.on('error', function(err) {
-			reject(new Error(err));
+			reject(err);
 		});
 
 		request.end();
 	});
 }
 
-function beerAndSave(data) {
+function composeBeerDoc(data) {
 	var regexTitle = new RegExp(/[^[]*/);
 	var regexRating = new RegExp(/\[(.*)\]/);
-	var savedBeers = [];
 
 	_.each(data.data, function(el, index, list) {
-		var beerDoc = new Beer({
+		var beer = new Beer({
 			title: el.caption.text.match(regexTitle)[0].slice(0, -1),
 			photoUrl: el.images.standard_resolution.url,
 			instagram: el.link,
@@ -225,27 +204,59 @@ function beerAndSave(data) {
 			untappdRating: 3,
 			userRating: el.caption.text.match(regexRating)[0].slice(1, -1),
 			date: new Date(el.created_time * 1000),
-			createdBy: el.user.id
+			createdBy: el.user.id,
 		});
 
-		_getBeerID(beerDoc)
+		_getBeerID(beer)
 		.then(function(beerID) {
-			console.log(beerID);
-			return _getBeerRating(beerDoc, beerID);
-		})
-		.then(function(beerDoc) {
-			console.log(beerDoc);
-			var beeres = _saveToDB(beerDoc);
-			//savedBeers.push(beeres);
-			//console.log(beeres);
+			untappdOptions = {
+				hostname: 'api.untappd.com',
+				method: 'GET',
+				path: '/v4/beer/info/' + beerID + '?client_id=' + process.env.UNTAPPD_ID + '&client_secret=' + process.env.UNTAPPD_PASS + '&compact=true',
+			};
+			makeRequest(untappdOptions, function(err, result) {
+				if (err) res.send(err);
+				if (result) {
+					beer.untappdRating = parseFloat(result.response.beer.rating_score);
+					_saveToDB(beer, cb);
+				} else {
+					res.send('No data available');
+				}
+			});
 		})
 		.catch(function(err) {
-			console.log(err);
+			res.send(err);
 		});
-
 	});
-	console.log(savedBeers);
-	return savedBeers;
+
+	function _saveToDB(beer, cb) {
+		// search for duplicates (faster than findOne)
+		Beer.find({title: beer.title}).limit(1).exec(function(err, res) {
+			if (err) {
+				console.log('[' + 'makeRequest; Beer.findOne'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
+			}
+
+			// if no duplicate entry in DB, save the document
+			if (!res.length) {
+				beer.save(function(err, beer) {
+					if (err) console.log(err);
+
+					// for populating the user with the new beer
+					User.update({_id: beer.createdBy}, {$addToSet: {beers: beer}}, function(err, user) {
+						if (err) console.log(err);
+					});
+
+					cb(null, beer);
+
+					console.log('[' + 'makeRequest; beer.save'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' saved to DB!'.white);
+				});
+			} else {
+				console.log('[' + 'makeRequest; Beer.find'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' already in DB!'.white);
+
+				cb(null, res);
+			}
+		});
+	}
 
 	function _getBeerID(beer) {
 		untappdOptions = {
@@ -256,7 +267,7 @@ function beerAndSave(data) {
 		return new Promise(function(resolve, reject) {
 			makeRequest(untappdOptions)
 			.then(function(result) {
-				if (result !== null && typeof result === 'object') {
+				if(result !== null && typeof result === 'object') {
 					var items = result.response.beers.items;
 					var beerID;
 					_.each(items, function(el, index, list) {
@@ -267,76 +278,18 @@ function beerAndSave(data) {
 					});
 					resolve(beerID);
 				} else {
-					reject('Received weird data from Untappd...');
+					reject(Error('No data received from Untappd!'));
 				}
-			}, function(err) {
-				reject(err);
 			});
 		});
 	}
 
-	function _getBeerRating(beerDoc, beerID) {
-		untappdOptions = {
-			hostname: 'api.untappd.com',
-			method: 'GET',
-			path: '/v4/beer/info/' + beerID + '?client_id=' + process.env.UNTAPPD_ID + '&client_secret=' + process.env.UNTAPPD_PASS + '&compact=true',
-		};
-		return new Promise(function(resolve, reject) {
-			makeRequest(untappdOptions)
-			.then(function(result) {
-				beerDoc.untappdRating = parseFloat(result.response.beer.rating_score);
-				resolve(beerDoc);
-			}, function(err) {
-				reject(err);
-			});
+	function _retry(operation) {
+		return operation()
+		.catch(function(reason) {
+			return _retry(operation);
 		});
 	}
-
-	function _saveToDB(beer) {
-		var savedBeer;
-		// search for duplicates (faster than findOne)
-		Beer.find({title: beer.title}).limit(1).exec()
-		.then(function(beers) {
-			// if no duplicate entry in DB, save the document
-			if (!beers.length) {
-				return beer.save();
-			} else {
-				console.log('[' + 'makeRequest; Beer.find'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' already in DB!'.white);
-			}
-		})
-		.then(function(beer) {
-			savedBeer = beer;
-			console.log('[' + 'makeRequest; beer.save'.bgWhite.black + ']: ' + 'beer with: '.white + beer.title.yellow + ' saved to DB!'.white);
-			return User.update({_id: beer.createdBy}, {$addToSet: {beers: beer}});
-		})
-		.then(function(user) {
-			// TODO: change for multiple users (or delete)
-			// for populating the user with the new beer
-			console.log('User updated with new beers');
-		})
-		.catch(function(err) {
-			console.log('[' + 'makeRequest; Beer.findOne'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
-			console.log(err);
-		});
-
-		return savedBeer;
-	}
-}
-
-function _retry(promise, arg) {
-	return promise(arg)
-	.then(function(result) {
-		return result;
-	}, function(err) {
-		_retry(promise);
-	});
-
-	// return promise()
-	// .then(function(result) {
-	// 	return result;
-	// }, function(err) {
-	// 	_retry(promise);
-	// });
 }
 
 module.exports = router;

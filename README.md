@@ -7,16 +7,20 @@
 ### Github
 
 1. Create new repo on github.com
-2. `git init` or `git clone` using __Github__ settings on local machine
+2. `git init` or `git clone` using **Github** settings on local machine
 3. Create *README.md*
 
 ### Heroku
 
-1. Create new __Heroku__ app with `heroku create`
-2. Connect with __Github__ from *Dashboard*
+1. Create new **Heroku** app with `heroku create`
+2. Connect with **Github** from *Dashboard*
 3. `git push heroku master`
 
-## Setup basic Node.js - Express server
+---------------------------------
+
+## Server setup
+
+### Setup basic Node.js - Express server
 
 1. Create *server.js*
 2. Import express module
@@ -24,24 +28,43 @@
 4. Create error and index page
 5. Start the server using the port and log something to the console
 
-## Setup some views
+### Setup basic views
 
-1. `npm install --save express-handlebars` or __EJS__ or __Jade__
-2. Require the new resource and set the app view engine to __Handlebars__ 
+1. `npm install --save express-handlebars` or **EJS** or **Jade**
+2. Require the new resource and set the app view engine to **Handlebars** 
 3. Create *views/error.handlebars* and *views/index.handlebars* views
 4. Refactor the server side routes to render the newly created views
 
-## Connect with MongoLab
+### Connect with MongoLab
 
 1. `npm install --save mongoose` and require it
 2. Connect to mongolab
 3. Create *Beer* and *User* schema
 4. Create and export *Beer* and *User* models from module.
 
-## Setup environment variables
+### Setup environment variables
 
-1. Create *env.json* to store all private variables and add it to *.gitignore*
-2. Add necessary environment variables to __Heroku__
+1. `npm install --save dotenv`
+2. Create *env.json* to store all private variables and add it to *.gitignore*
+3. Add necessary environment variables to **Heroku**
+
+### Save beers to DB
+
+1. Create beer model with data from **Instagram** and **Untappd** and populate the *createdBy* field with user data
+2. Save beer to DB if it doesn't already exist
+3. Update user model to store references to beers
+
+### Setup local API to work with Instagram
+
+1. Create */api/posts* to get all beer posts from DB
+2. Create */api/users* to get all users from DB
+
+### Refactor usign Q promises
+
+1. `npm install --save q`
+2. 
+
+---------------------------------
 
 ## Register with Instagram API
 
@@ -55,16 +78,7 @@
 1. GET beers using **Instagram** beer title
 2. GET beer info like description and rating using beer ID from first search
 
-## Save beers to DB
-
-1. Create beer model with data from **Instagram** and **Untappd** and populate the *createdBy* field with user data
-2. Save beer to DB if it doesn't already exist
-3. Update user model to store references to beers
-
-### Setup local API to work with Instagram
-
-1. Create */api/posts* to get all beer posts from DB
-2. Create */api/users* to get all users from DB
+---------------------------------
 
 ## Setup Gulp
 
@@ -76,12 +90,9 @@
 6. `npm install --save-dev vinyl-buffer` to apply transformations to the vinyl stream
 7. `npm install --save-dev gulp-uglify gulp-autoprefixer gulp-sass gulp-useref` and create tasks for css, js, and html files
 
-## Refactor usign Q promises
+---------------------------------
 
-1. `npm install --save q`
-2. 
-
-## Backbone
+## Client setup
 
 ### Initial setup
 
