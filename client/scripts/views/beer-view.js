@@ -44,7 +44,6 @@ var BeersView = Backbone.View.extend({
 
 	render: function() {
 		this.$beersList.html('');
-		console.log('tried to render');
 		_.each(this.model.toArray(), function(beer) {
 			this.$beersList.append((new BeerView({model: beer})).render().$el);
 		}.bind(this));

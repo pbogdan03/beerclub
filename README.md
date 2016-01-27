@@ -59,10 +59,14 @@
 1. Create */api/posts* to get all beer posts from DB
 2. Create */api/users* to get all users from DB
 
-### Refactor usign Q promises
+### Refactor usign ES6 promises
 
-1. `npm install --save q`
-2. 
+1. Change all the API calls to use promises instead of callbacks
+2. Chain promises and be careful what each returns
+
+### Setup error handling
+
+1. 
 
 ---------------------------------
 

@@ -5,7 +5,8 @@ var Schema = mongoose.Schema;
 var beerSchema = new Schema({
 	title: String,
 	photoUrl: String,
-	instagram: String,
+	instagramUrl: String,
+	breweryUrl: String,
 	description: String,
 	untappdRating: Number,
 	userRating: Number,

@@ -24,8 +24,8 @@ passport.use(new InstagramStrategy({
 		callbackURL: 'http://localhost:5000/auth/instagram/callback'
 	},
 	function(accessToken, refreshToken, profile, done) {
-		console.log('-----------------------');
-		console.log(profile);
+		//console.log('-----------------------');
+		//console.log(profile);
 		User.findById(profile.id, function(err, user) {
 			if (err) return done(err);
 			if (!user) {
