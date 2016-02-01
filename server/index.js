@@ -34,7 +34,7 @@ app.use(session({secret: 'test', saveUninitialized: true, resave: true}));
 app.use(passport.initialize());
 app.use(passport.session());
 
-if ('development' === env) {
+if (env === 'development') {
 	app.use(require('connect-livereload')());
 }
 
