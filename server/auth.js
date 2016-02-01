@@ -21,7 +21,7 @@ passport.deserializeUser(function(id, done) {
 passport.use(new InstagramStrategy({
 		clientID: process.env.INSTA_ID,
 		clientSecret: process.env.INSTA_PASS,
-		callbackURL: 'http://localhost:5000/auth/instagram/callback'
+		callbackURL: process.env.APP_HOST + '/auth/instagram/callback'
 	},
 	function(accessToken, refreshToken, profile, done) {
 		//console.log('-----------------------');
