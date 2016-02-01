@@ -4,9 +4,11 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-var dotenv = require('dotenv');
-if (dotenv) {
+try {
+	var dotenv = require('dotenv');
 	dotenv.load();
+} catch (err) {
+	console.error(err);
 }
 
 var passport = require('./auth');
