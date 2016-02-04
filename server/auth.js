@@ -6,12 +6,13 @@ var mongoose = require('mongoose');
 var InstagramStrategy = require('passport-instagram').Strategy;
 var User = require('./db/models/User');
 
-passport.serializeUser(function(obj, done) {
-	console.log('[' + 'serializeUser'.bgWhite.black + ']: ' + 'trying to serialize user '.white + obj.user.name.yellow);
-	done(null, obj.user.id);
+passport.serializeUser(function(user, done) {
+	console.log('[' + 'serializeUser'.bgWhite.black + ']: ' + 'trying to serialize user '.white + user.username.yellow);
+	done(null, user._id);
 });
 
 passport.deserializeUser(function(id, done) {
+	console.log(id);
 	console.log('[' + 'deserializeUser'.bgWhite.black + ']: ' + 'trying to deserialize user with id: '.white + id.yellow);
 	User.findById(id, function(err, user) {
 		done(err, user);
@@ -26,29 +27,26 @@ passport.use(new InstagramStrategy({
 	function(accessToken, refreshToken, profile, done) {
 		//console.log('-----------------------');
 		//console.log(profile);
-		User.findById(profile.id, function(err, user) {
-			if (err) return done(err);
-			if (!user) {
+		User.find({accessToken: accessToken}).exec()
+		.then(function(user) {
+			if (!user.length) {
 				user = new User({
 					_id: parseInt(profile.id),
 					name: profile.displayName,
-					username: profile.username
+					username: profile.username,
+					accessToken: accessToken
 				});
 				user.save(function(err) {
 					if (err) console.log(err);
 					console.log('[' + 'InstagramStrategy'.bgWhite.black + ']: ' + profile.username.yellow + ' saved!'.white);
-					return done(null, {
-						accessToken: accessToken,
-						user: user
-					});
+					return done(null, user);
 				});
 			} else {
 				console.log('[' + 'InstagramStrategy'.bgWhite.black + ']: ' + profile.username.yellow + ' already in DB!'.white);
-				return done(null, {
-					accessToken: accessToken,
-					user: user
-				});
+				return done(null, user);
 			}
+		}, function(err) {
+			return done(err);
 		});
 	}));
 

@@ -8,7 +8,6 @@ var beerSchema = new Schema({
 	instagramUrl: String,
 	breweryUrl: String,
 	description: String,
-	untappdRating: Number,
 	userRating: Number,
 	date: Date,
 	createdBy: {type: Number, ref: 'User'}

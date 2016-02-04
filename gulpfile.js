@@ -30,7 +30,6 @@ gulp.task('nodemon', ['styles', 'browserify'], function(cb) {
 
 	gulp.watch('./client/styles/*.scss', ['styles']);
 	gulp.watch('./client/scripts/**/*.js', ['browserify']);
-	gulp.watch('./client/*.html', ['html']);
 	gulp.watch(['public/**'], reloadNotify);
 });
 

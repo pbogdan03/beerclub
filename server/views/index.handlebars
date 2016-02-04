@@ -1,10 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 	<meta charset="UTF-8">
 	<title>Beerclub</title>
+
+	<link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
-	<h1>Welcome to Beerclub</h1>	
+	<script type="text/template" class="beer-list-template">
+		<div class="container">
+			<h1>Welcome to Beerclub</h1>	
+		</div>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12">
+					<h2>Beers</h2>
+					<a href="/instagram/posts" class="btn btn-primary instauth">Update Posts</a>
+				</div>
+			</div>
+			<div class="row beer-list">
+			</div>
+		</div>
+	</script>
+
+	<script type="text/template" class="beer-post-template">
+		<div style="background-image: linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), url(<%= photoUrl %>);">
+			<h3 class="beer-post__title"><a href="<%= breweryUrl %>"><%= title %></a></h3>
+			<p class="beer-post__description"><%= description %></p>
+			<p class="beer-post__rating">Rating: <%= userRating %></p>
+			<p class="beer-post__user">Created by: <%= createdBy.username %></p>
+		</div>
+	</script>
+
+	<script src="main.js"></script>
 </body>
 </html>

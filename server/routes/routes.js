@@ -1,17 +1,45 @@
 var express = require('express');
 var router = express.Router();
 require('colors');
+var stringify = require('json-stringify-safe');
 
 var passport = require('../auth');
 var h = require('./helpers');
 var Beer = require('../db/models/Beer');
 var User = require('../db/models/User');
 
-var accessToken = '';
 var instagramOptions = {};
 var untappdOptions = {};
-var currentUser = {};
 var beerToSave = {};
+
+/**
+ ***********************************************
+ *	Home route
+ ***********************************************
+ */
+
+router.get('/', function(req, res, next) {
+	if (!req.session.accessToken) {
+		User.find({}).limit(1).exec()
+		.then(function(user) {
+			if (user.length) {
+				req.session.accessToken = user[0].accessToken;
+				console.log('[' + '/'.bgWhite.black + ']: ' + 'accessToken stored in session'.white);
+				console.log(req.session.accessToken);
+				res.render('index');
+			} else {
+				console.log('[' + '/'.bgWhite.black + ']: ' + 'no user in database'.white);
+				res.redirect('/auth/instagram');
+			}
+		}, function(err) {
+			//retry
+			console.error(err);
+			next(err);
+		});
+	} else {
+		res.render('index');
+	}
+});
 
 /**
  ***********************************************
@@ -28,36 +56,9 @@ router.get('/auth/instagram',
 router.get('/auth/instagram/callback',
 	passport.authenticate('instagram', {failureRedirect: '/auth/instagram'}),
 	function(req, res, next) {
-		// Not the best way?
-		currentUser = req.user.user;
-		accessToken = req.user.accessToken;
-
-		console.log('[' + '/auth/instagram/callback'.bgWhite.black + ']: ' + 'received accessToken: '.white + accessToken.yellow);
+		console.log('[' + '/auth/instagram/callback'.bgWhite.black + ']: ' + 'received accessToken: '.white + req.session.accessToken.yellow);
 		res.redirect('/instagram/posts');
 	});
-
-/**
- ***********************************************
- *	Helper routes
- ***********************************************
- */
-
-router.get('/user', function(req, res, next) {
-	// TODO graceful fail on no token
-	if (!accessToken) {
-		res.send('No access token!');
-	} else {
-		options = {
-			hostname: 'api.instagram.com',
-			method: 'GET',
-			path: '/v1/users/self/?access_token=' + accessToken,
-		};
-		h.makeRequest(options, function(err, result) {
-			if (err) res.send(err);
-			res.send(result);
-		});
-	}
-});
 
 /**
  ***********************************************
@@ -65,42 +66,42 @@ router.get('/user', function(req, res, next) {
  ***********************************************
  */
 
-router.get('/instagram/posts', h.isAuthenticated, function(req, res, next) {
-	instagramOptions = {
-		hostname: 'api.instagram.com',
-		method: 'GET',
-		path: '/v1/users/self/media/recent/?access_token=' + accessToken,
-	};
-	console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'got in the router'.white);
-
-	h.makeRequest(instagramOptions)
-	.then(function(result) {
-		return h.beerAndSave(result);
-	})
-	.then(function(beers) {
-		//console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'from makeRequest, beer:\n'.white + beer + '\n----------------------'.yellow);
-		if (beers && beers.length) {
-			res.redirect('/');
-		} else {
-			console.log(beers);
-			//console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'from makeRequest, when beer is not an object:\n'.white + beer + '\n----------------------'.yellow);
-		}
-	})
-	.catch(function(err) {
-		console.error(err.stack);
-		// res.redirect('/');
-	});
-
-	// _retry(makeRequest(instagramOptions))
-	// .then(function(result) {
-	// 	return composeBeerDoc(result);
-	// })
-	// .then(function(beer) {
-	// 	res.redirect('/');
-	// })
-	// .catch(function(err) {
-	// 	res.send(err);
-	// });
+router.get('/instagram/posts', function(req, res, next) {
+	if (req.session.accessToken) {
+		instagramOptions = {
+			hostname: 'api.instagram.com',
+			method: 'GET',
+			path: '/v1/users/self/media/recent/?access_token=' + req.session.accessToken //'16384709.6ac06b4.49b97800d7fd4ac799a2c889f50f2587'
+		};
+		console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'accessToken in session, getting instagram posts'.white);
+		h.retry(h.makeRequest, instagramOptions, 5)
+		.then(function(result) {
+			return h.beerAndSave(result);
+		})
+		.then(function(beers) {
+			// console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'from makeRequest, beers:\n'.white + beers + '\n----------------------'.yellow);
+			if (beers && beers.length) {
+				res.redirect('/');
+			} else {
+				console.log('no new beers on instagram');
+				res.redirect('/');
+				//console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'from makeRequest, when beer is not an object:\n'.white + beer + '\n----------------------'.yellow);
+			}
+		})
+		.catch(function(err) {
+			console.log(err.stack);
+			// accessToken expired
+			try {
+				if (err.message.meta.error_type === 'OAuthAccessTokenException') {
+					res.redirect('/auth/instagram');
+				}
+			} catch (err) {}
+			next(err);
+		});
+	} else {
+		console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'no accessToken in session'.white);
+		res.redirect('/');
+	}
 });
 
 /**
@@ -124,7 +125,7 @@ router.get('/api/posts', function(req, res, next) {
 			}
 		}, function(err) {
 			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
-			res.send(err);
+			next(err);
 		});
 });
 
@@ -143,25 +144,8 @@ router.get('/api/users', function(req, res, next) {
 			}
 		}, function(err) {
 			console.log('[' + '/api/posts'.bgWhite.black + ']: ' + 'error for connecting: '.white + err.yellow);
-			res.send(err);
+			next(err);
 		});
 });
-
-/**
- ***********************************************
- *	Home route
- ***********************************************
- */
-
-router.get('/', function(req, res, next) {
-	res.render('index');
-});
-
-/**
- ***********************************************
- *	Helper functions
- ***********************************************
- */
-
 
 module.exports = router;

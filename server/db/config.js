@@ -10,3 +10,5 @@ mongoose.connect(dbURL, function(err) {
 	}
 	console.log('--->>> Connected to MongoLab...'.white);
 });
+
+module.exports = dbURL;

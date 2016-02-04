@@ -6,6 +6,7 @@ var userSchema = new Schema({
 	_id: Number,
 	name: String,
 	username: String,
+	accessToken: String,
 	beers: [{type: Schema.Types.ObjectId, ref: 'Beer'}]
 });
 

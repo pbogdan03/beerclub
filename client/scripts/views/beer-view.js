@@ -4,12 +4,6 @@ var $ = require('jquery');
 var beers = require('../models/beer').beers;
 var Beer = require('../models/beer').Beer;
 
-// CONFIGURATION
-// can use {{ var }}
-_.templateSettings = {
-	interpolate: /\{\{(.+?)\}\}/g
-};
-
 // Backbone Views
 var BeerView = Backbone.View.extend({
 	className: 'col-md-4 beer-post',

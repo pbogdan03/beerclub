@@ -5,16 +5,6 @@ require('colors');
 var Beer = require('../db/models/Beer');
 var User = require('../db/models/User');
 
-function isAuthenticated(req, res, next) {
-	if (req.isAuthenticated()) {
-		console.log('[' + 'isAuthenticated'.bgWhite.black + ']: ' + 'user is authenticated, call next()'.green);
-		return next();
-	}
-
-	console.log('[' + 'isAuthenticated'.bgWhite.black + ']: ' + 'user isn\'t authenticated, redirecting to /auth/instagram'.red);
-	res.redirect('/auth/instagram');
-}
-
 function makeRequest(options) {
 	return new Promise(function(resolve, reject) {
 		var request = https.request(options, function(res) {
@@ -37,7 +27,10 @@ function makeRequest(options) {
 					reject(e);
 				} finally {
 					if (res.statusCode !== 200) {
-						reject(new Error('statusCode: ' + res.statusCode));
+						var error = new Error();
+						error.name = 'statusCode: ' + res.statusCode;
+						error.message = options.hostname + ' --- ' + res.body.meta.error_type;
+						reject(error);
 					} else {
 						//reject(new Error('testing error from makeRequest'));
 						resolve(res.body);
@@ -58,8 +51,10 @@ function beerAndSave(data) {
 	var regexTitle = new RegExp(/[^[]*/);
 	var regexRating = new RegExp(/\[(.*)\]/);
 	var savedBeers = [];
-
 	return new Promise(function(resolve, reject) {
+		if (data instanceof Error) {
+			reject(data);
+		}
 		_.each(data.data, function(el, index, list) {
 			var beerDoc = new Beer({
 				title: el.caption.text.match(regexTitle)[0].slice(0, -1),
@@ -73,15 +68,17 @@ function beerAndSave(data) {
 				createdBy: el.user.id,
 			});
 
-			_getBeerID(beerDoc)
-			.then(function(beerInfo) {
-				return _getBeerRating(beerInfo);
-			})
+			_updateBeerInfo(beerDoc)
 			.then(function(beerDoc) {
 				return _saveToDB(beerDoc);
 			})
 			.then(function(savedBeer) {
-				savedBeers.push(savedBeer);
+				if (savedBeer instanceof Error) {
+					throw(savedBeer);
+				}
+				if (savedBeer) {
+					savedBeers.push(savedBeer);
+				}
 				if (index === list.length - 1) {
 					resolve(savedBeers);
 				}
@@ -93,25 +90,28 @@ function beerAndSave(data) {
 		});
 	});
 
-	function _getBeerID(beerDoc) {
+	function _updateBeerInfo(beerDoc) {
 		untappdOptions = {
 			hostname: 'api.untappd.com',
 			method: 'GET',
 			path: '/v4/search/beer?client_id=' + process.env.UNTAPPD_ID + '&client_secret=' + process.env.UNTAPPD_PASS + '&q=' + beerDoc.title.replace(/\s/g, '%20'),
 		};
-		return makeRequest(untappdOptions)
+		return retry(makeRequest, untappdOptions, 2)
 		.then(function(result) {
+			if (result instanceof Error) {
+				return result;
+			}
 			if (result !== null && typeof result === 'object') {
 				var items = result.response.beers.items;
-				var beerID;
+				// var beerID;
 				_.each(items, function(el, index, list) {
 					if (el.beer.beer_name.toLowerCase() === beerDoc.title.toLowerCase()) {
-						beerID = el.beer.bid;
+						// beerID = el.beer.bid;
 						beerDoc.description = el.beer.beer_description;
 						beerDoc.breweryUrl = el.brewery.contact.url;
 					}
 				});
-				return {beerDoc: beerDoc, beerID: beerID};
+				return beerDoc;
 			} else {
 				return 'Received weird data from Untappd, need to try again...';
 			}
@@ -120,26 +120,29 @@ function beerAndSave(data) {
 		});
 	}
 
-	function _getBeerRating(beerInfo) {
-		untappdOptions = {
-			hostname: 'api.untappd.com',
-			method: 'GET',
-			path: '/v4/beer/info/' + beerInfo.beerID + '?client_id=' + process.env.UNTAPPD_ID + '&client_secret=' + process.env.UNTAPPD_PASS + '&compact=true',
-		};
-		return makeRequest(untappdOptions)
-		.then(function(result) {
-			if (result !== null && typeof result === 'object') {
-				beerInfo.beerDoc.untappdRating = parseFloat(result.response.beer.rating_score);
-				return beerInfo.beerDoc;
-			} else {
-				return 'Received weird data from Untappd, need to try again...';
-			}
-		}, function(err) {
-			return err;
-		});
-	}
+	// function _getBeerRating(beerInfo) {
+	// 	untappdOptions = {
+	// 		hostname: 'api.untappd.com',
+	// 		method: 'GET',
+	// 		path: '/v4/beer/info/' + beerInfo.beerID + '?client_id=' + process.env.UNTAPPD_ID + '&client_secret=' + process.env.UNTAPPD_PASS + '&compact=true',
+	// 	};
+	// 	return makeRequest(untappdOptions)
+	// 	.then(function(result) {
+	// 		if (result !== null && typeof result === 'object') {
+	// 			beerInfo.beerDoc.untappdRating = parseFloat(result.response.beer.rating_score);
+	// 			return beerInfo.beerDoc;
+	// 		} else {
+	// 			return 'Received weird data from Untappd, need to try again...';
+	// 		}
+	// 	}, function(err) {
+	// 		return err;
+	// 	});
+	// }
 
 	function _saveToDB(beerDoc) {
+		if (beerDoc instanceof Error) {
+			return beerDoc;
+		}
 		var savedBeer;
 		// search for duplicates (faster than findOne)
 		return Beer.find({title: beerDoc.title}).limit(1).exec()
@@ -149,11 +152,11 @@ function beerAndSave(data) {
 				return beerDoc.save();
 			} else {
 				console.log('[' + 'makeRequest; Beer.find'.bgWhite.black + ']: ' + 'beer with: '.white + beerDoc.title.yellow + ' already in DB!'.white);
-				return beerInDB;
+				return;
 			}
 		})
 		.then(function(result) {
-			if (!result.length) { // if beerDoc.save (it's an object)
+			if (result) { // if beerDoc.save (it's an object)
 				console.log('[' + 'makeRequest; beer.save'.bgWhite.black + ']: ' + 'beer with: '.white + result.title.yellow + ' saved to DB!'.white);
 				User.update({_id: result.createdBy}, {$addToSet: {beers: result}}, function(err, result) {
 					if (err) {
@@ -169,17 +172,20 @@ function beerAndSave(data) {
 }
 
 // to use in case of server timeout from APIs
-function retry(promise, arg) {
+function retry(promise, arg, maxTries) {
 	return promise(arg)
 	.then(function(result) {
 		return result;
 	}, function(err) {
-		_retry(promise);
+		if (maxTries > 1) {
+			return retry(promise, arg, maxTries - 1);
+		} else {
+			return err;
+		}
 	});
 }
 
 module.exports = {
-	isAuthenticated: isAuthenticated,
 	makeRequest: makeRequest,
 	beerAndSave: beerAndSave,
 	retry: retry

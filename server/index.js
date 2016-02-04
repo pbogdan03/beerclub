@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var MongoDBStore = require('connect-mongodb-session')(session);
 try {
 	var dotenv = require('dotenv');
 	dotenv.load();
@@ -13,12 +14,19 @@ try {
 
 var passport = require('./auth');
 var routes = require('./routes/routes');
-
-require('./db/config');
+var dbURL = require('./db/config');
 
 var env = process.env.NODE_ENV || 'development';
 
 var app = express();
+var store = new MongoDBStore({
+	uri: dbURL,
+	collection: 'mongoSession'
+});
+
+store.on('error', function(err) {
+	console.error(err);
+});
 
 // set handlebars as the view engine
 var handlebars = require('express-handlebars').create();
@@ -30,17 +38,23 @@ app.use(favicon(path.join(__dirname, './../public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
-app.use(session({secret: 'test', saveUninitialized: true, resave: true}));
+app.use(session({
+	secret: 'test',
+	saveUninitialized: true,
+	resave: true,
+	cookie: {
+		maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+	},
+	store: store
+}));
 app.use(passport.initialize());
 app.use(passport.session());
-
 if (env === 'development') {
 	app.use(require('connect-livereload')());
 }
-
 app.use(express.static(path.join(__dirname, './../public')));
 
-app.use('/', routes);
+app.use(routes);
 
 // app.get('/headers', function(req, res) {
 // 	res.set('Content-Type', 'text/plain');
@@ -60,7 +74,7 @@ app.use(function(req, res, next) {
 
 // development error handler
 // will print stacktrace
-if (app.get('env') === 'development') {
+if (env === 'development') {
 	app.use(function(err, req, res, next) {
 		res.status(err.status || 500);
 		res.render('error', {

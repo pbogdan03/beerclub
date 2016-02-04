@@ -64,6 +64,7 @@
 1. Change all the API calls to use promises instead of callbacks
 2. Chain promises and be careful what each returns
 
+
 ### Setup error handling
 
 1. 
@@ -73,9 +74,10 @@
 ## Register with Instagram API
 
 1. Install **Passport** to authenticate with **Instagram**
-2. Pass the *access_token* when available and store it to be used with the API
-3. Change the **Instagram Strategy** to work with the database, by storing the user in the database and changing the serialize and deserialize user functions
-4. GET user posts from **Instagram** after authentication
+2. Save the *access_token* on *User* document and store it in **express-session** with a *MongoDB* store
+3. If the *access_token* expires reauthenticate with **Instagram**
+4. Change the **Instagram Strategy** to work with the database, by storing the user in the database and changing the serialize and deserialize user functions
+5. GET user posts from **Instagram** after authentication
 
 ## Register with Untappd API
 
