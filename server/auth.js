@@ -4,6 +4,8 @@ var util = require('util');
 require('colors');
 var mongoose = require('mongoose');
 var InstagramStrategy = require('passport-instagram').Strategy;
+var crypto = require('crypto');
+
 var User = require('./db/models/User');
 
 passport.serializeUser(function(user, done) {
@@ -13,7 +15,7 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
 	console.log(id);
-	console.log('[' + 'deserializeUser'.bgWhite.black + ']: ' + 'trying to deserialize user with id: '.white + id.yellow);
+	console.log('[' + 'deserializeUser'.bgWhite.black + ']: ' + 'trying to deserialize user with id: '.white + id);
 	User.findById(id, function(err, user) {
 		done(err, user);
 	});
@@ -27,14 +29,17 @@ passport.use(new InstagramStrategy({
 	function(accessToken, refreshToken, profile, done) {
 		//console.log('-----------------------');
 		//console.log(profile);
-		User.find({accessToken: accessToken}).exec()
+		var cipher = crypto.createCipher('aes256', process.env.CRYPTO_PASS);
+		var encryptedAccessToken = cipher.update(accessToken, 'utf8', 'hex') + cipher.final('hex');
+
+		User.find({accessToken: encryptedAccessToken}).exec()
 		.then(function(user) {
 			if (!user.length) {
 				user = new User({
 					_id: parseInt(profile.id),
 					name: profile.displayName,
 					username: profile.username,
-					accessToken: accessToken
+					accessToken: encryptedAccessToken
 				});
 				user.save(function(err) {
 					if (err) console.log(err);

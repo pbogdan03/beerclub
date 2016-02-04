@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 require('colors');
+var crypto = require('crypto');
 
 var passport = require('../auth');
 var h = require('./helpers');
@@ -67,10 +68,12 @@ router.get('/auth/instagram/callback',
 
 router.get('/instagram/posts', function(req, res, next) {
 	if (req.session.accessToken) {
+		var decipher = crypto.createDecipher('aes256', process.env.CRYPTO_PASS);
+		var decryptedAccessToken = decipher.update(req.session.accessToken, 'hex', 'utf8') + decipher.final('utf8');
 		instagramOptions = {
 			hostname: 'api.instagram.com',
 			method: 'GET',
-			path: '/v1/users/self/media/recent/?access_token=' + req.session.accessToken //'16384709.6ac06b4.49b97800d7fd4ac799a2c889f50f2587'
+			path: '/v1/users/self/media/recent/?access_token=' + decryptedAccessToken //'16384709.6ac06b4.49b97800d7fd4ac799a2c889f50f2587'
 		};
 		console.log('[' + '/instagram/posts'.bgWhite.black + ']: ' + 'accessToken in session, getting instagram posts'.white);
 		h.retry(h.makeRequest, instagramOptions, 5)
