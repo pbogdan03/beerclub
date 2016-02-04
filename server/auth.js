@@ -14,7 +14,6 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
-	console.log(id);
 	console.log('[' + 'deserializeUser'.bgWhite.black + ']: ' + 'trying to deserialize user with id: '.white + id);
 	User.findById(id, function(err, user) {
 		done(err, user);
