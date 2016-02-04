@@ -1,3 +1,5 @@
+$screen-md-min: 992px;
+
 p {
 	margin: 0px;
 }
@@ -7,7 +9,7 @@ p {
 }
 
 .beer-post {
-	padding-bottom: 33.33%;
+	padding-bottom: 100%;
 	position: relative;
 
 	& > div {
@@ -40,4 +42,10 @@ p {
 	height: auto;
 	top: 0px;
 	left: 110%;
+}
+
+@media (min-width: $screen-md-min) {
+	.beer-post {
+		padding-bottom: 33.33%;
+	}
 }
