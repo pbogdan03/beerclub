@@ -9,7 +9,7 @@ try {
 	var dotenv = require('dotenv');
 	dotenv.load();
 } catch (err) {
-	console.error(err);
+	console.log('----------- no dotenv module (no problem) -----------');
 }
 
 var passport = require('./auth');

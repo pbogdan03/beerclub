@@ -1,7 +1,6 @@
 var express = require('express');
 var router = express.Router();
 require('colors');
-var stringify = require('json-stringify-safe');
 
 var passport = require('../auth');
 var h = require('./helpers');
