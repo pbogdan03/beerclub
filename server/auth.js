@@ -9,6 +9,7 @@ var crypto = require('crypto');
 var User = require('./db/models/User');
 
 passport.serializeUser(function(user, done) {
+	console.log(user);
 	console.log('[' + 'serializeUser'.bgWhite.black + ']: ' + 'trying to serialize user '.white + user.username.yellow);
 	done(null, user._id);
 });

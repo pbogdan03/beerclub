@@ -15,6 +15,7 @@ try {
 var passport = require('./auth');
 var routes = require('./routes/routes');
 var dbURL = require('./db/config');
+require('./controller/schedule');
 
 var env = process.env.NODE_ENV || 'development';
 
