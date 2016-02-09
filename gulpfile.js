@@ -8,7 +8,7 @@ var $ = require('gulp-load-plugins')();
 
 gulp.task('default', ['nodemon'], function() {});
 
-gulp.task('nodemon', ['styles', 'browserify'], function(cb) {
+gulp.task('nodemon', ['styles', 'templates', 'browserify'], function(cb) {
 	lr.listen(35729, function() {
 		console.log('--->>> Tiny-lr listens on: 35729'.white);
 	});
@@ -30,7 +30,19 @@ gulp.task('nodemon', ['styles', 'browserify'], function(cb) {
 
 	gulp.watch('./client/styles/*.scss', ['styles']);
 	gulp.watch('./client/scripts/**/*.js', ['browserify']);
-	gulp.watch(['public/**'], reloadNotify);
+	gulp.watch('./client/templates/*.html', ['templates']);
+	gulp.watch(['public/**', 'server/views/**'], reloadNotify);
+});
+
+gulp.task('templates', function() {
+	return gulp.src('./client/templates/*.html')
+		.pipe($.htmlmin({
+			collapseWhitespace: true,
+			conservativeCollapse: true
+		}))
+		.pipe($.underscoreTemplate())
+		.pipe($.concat('templates.js'))
+		.pipe(gulp.dest('./client/scripts'));
 });
 
 gulp.task('styles', function() {
@@ -66,7 +78,7 @@ gulp.task('browserify', function() {
 		//desired output filename
 		.pipe(source('main.js'))
 		.pipe(buffer())
-		.pipe($.uglify())
+		//.pipe($.uglify())
 		.pipe(gulp.dest('./public'));
 });
 

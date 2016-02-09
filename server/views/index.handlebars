@@ -11,29 +11,6 @@
 	<link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
-	<script type="text/template" class="beer-list-template">
-		<div class="container">
-			<h1>Welcome to Beerclub</h1>	
-		</div>
-		<div class="container">
-			<div class="row">
-				<div class="col-md-12">
-					<h2>Beers</h2>		
-				</div>
-			</div>
-			<div class="row beer-list">
-			</div>
-		</div>
-	</script>
-
-	<script type="text/template" class="beer-post-template">
-		<div style="background-image: linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), url(<%= photoUrl %>);">
-			<h3 class="beer-post__title"><a href="<%= breweryUrl %>"><%= title %></a></h3>
-			<p class="beer-post__description"><%= description %></p>
-			<p class="beer-post__rating">Rating: <%= userRating %></p>
-			<p class="beer-post__user">Created by: <%= createdBy.username %></p>
-		</div>
-	</script>
 
 	<script src="main.js"></script>
 </body>
